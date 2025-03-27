@@ -31,7 +31,7 @@ I specialize in creating custom Discord Bots, creative Web Development, and insi
 ---
 
 ## Let me introduce you to some projects!
-- [Discord-Bots](Discord-Bots/)
-- [Webentwicklung](Web-Development/)
-- [Python-Projekte](Python-Projects/)
+- [Discord Bots](Discord-Bots/)
+- [Web Development](Web-Development/)
+- [Python Projekte](Python-Projects/)
 
