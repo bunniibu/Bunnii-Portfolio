@@ -35,6 +35,7 @@ This project meets the following criteria:
 - Responsive layout
 
 ---
+
 ## Preview Gallery 
 [*View all preview images in the Assets folder*](./Assets/)
 
@@ -64,6 +65,7 @@ This project meets the following criteria:
 
 ### User Left the Room
 ![User Left](Assets/userLeftRoom.png)
+
 ---
 
 Created with ❤️ by [Bunnii](mailto:bxnniibu@gmail.com)  
