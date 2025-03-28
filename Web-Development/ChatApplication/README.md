@@ -4,13 +4,6 @@ A web-based real-time chat application built with Blazor and SignalR. The applic
 
 ---
 
-## Preview
-
-![Chat Preview](assets/LoginPage.png)
-
-
----
-
 ## Project Requirements
 
 This project meets the following criteria:
@@ -41,6 +34,35 @@ This project meets the following criteria:
 - In-room messaging and presence awareness
 - Responsive layout
 
+---
+## Preview Gallery
+
+### Login Page
+![Chat Preview](Assets/LoginPage.png)
+
+### Chatroom Overview
+![Chatroom Page](Assets/Chatroom%20page.png)
+
+### Create New Room
+![Create Room](Assets/create%20%20room.png)
+
+### Room Deletion Blocked (not empty)
+![Can't Delete Room](Assets/cantDelete.png)
+
+### Room Successfully Deleted
+![Deleted Room](Assets/DeletedRoom.png)
+
+### Chatroom with Messages
+![Chat Channel](Assets/chat%20room%20channel.png)
+
+### SignalR Real-Time Messages
+![SignalR](Assets/SignalR%20texts.png)
+
+### Unique Nickname Enforcement
+![Unique Nickname](Assets/unique%20user.png)
+
+### User Left the Room
+![User Left](Assets/userLeftRoom.png)
 ---
 
 Created with ❤️ by [Bunnii](mailto:bxnniibu@gmail.com)  
