@@ -35,7 +35,8 @@ This project meets the following criteria:
 - Responsive layout
 
 ---
-## Preview Gallery
+## Preview Gallery 
+[*View all preview images in the Assets folder*](./Assets/)
 
 ### Login Page
 ![Chat Preview](Assets/LoginPage.png)
