@@ -1,0 +1,151 @@
+﻿@page "/chatroomspage/{nickname}"
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+<div class="container mt-4">
+    <h1 class="text-white bg-dark p-3 rounded">Chat Rooms</h1>
+    <p class="lead text-light">Welcome, @Nickname!</p>
+
+    @if (string.IsNullOrEmpty(Nickname))
+    {
+        <div class="alert alert-danger">Error: No nickname provided.</div>
+        <button class="btn btn-secondary" @onclick="GoBack">Go Back</button>
+    }
+    else
+    {
+        <div class="d-flex gap-2 my-3">
+            <button class="btn btn-outline-light custom-hover" @onclick="GetChatRooms">Load Chatrooms</button>
+            <input class="form-control w-25 bg-light text-dark" @bind="NewRoomName" placeholder="Enter room name..." />
+            <button class="btn btn-purple" @onclick="CreateChatRoom">Create Room</button>
+        </div>
+
+        @if (ChatRooms != null)
+        {
+            <ul class="list-group mt-3">
+                @foreach (var room in ChatRooms)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
+                        <span>@room</span>
+                        <div>
+                            <button class="btn btn-sm btn-purple me-2" @onclick="() => JoinRoom(room)">Join</button>
+                            @if (room != "General")
+                            {
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteChatRoom(room)">Delete</button>
+                            }
+                        </div>
+                    </li>
+
+                    @if (DeleteMessages.ContainsKey(room) && !string.IsNullOrEmpty(DeleteMessages[room]))
+                    {
+                        <p class="text-warning mt-1">@DeleteMessages[room]</p>
+                    }
+                }
+            </ul>
+        }
+    }
+</div>
+
+<style>
+    body {
+        background-color: #121212;
+        color: white;
+    }
+    .btn-purple {
+        background-color: #800080;
+        color: white;
+        border: none;
+    }
+    .btn-purple:hover {
+        background-color: #9b30ff;
+    }
+    .custom-hover:hover {
+        background-color: #ffffff !important; 
+        color: #000000 !important;
+        border-color: #ffffff !important; 
+    }
+</style>
+
+@code {
+    [Parameter] public string Nickname { get; set; } 
+
+    private string NewRoomName;
+    private List<string> ChatRooms = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(Nickname))
+        {
+            Navigation.NavigateTo("/"); 
+        }
+        return Task.CompletedTask;
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task GetChatRooms()
+    {
+        ChatRooms = await Http.GetFromJsonAsync<List<string>>("api/chat/rooms");
+    }
+
+    private async Task CreateChatRoom()
+    {
+        if (!string.IsNullOrWhiteSpace(NewRoomName))
+        {
+            DeleteMessages.Clear(); 
+
+            var response = await Http.PostAsJsonAsync("api/chat/rooms/create", NewRoomName);
+            if (response.IsSuccessStatusCode)
+            {
+                await GetChatRooms();
+                NewRoomName = "";
+            }
+        }
+    }
+
+
+    private async Task JoinRoom(string roomName)
+    {
+        Navigation.NavigateTo($"/chat?room={roomName}&user={Nickname}");
+    }
+
+    private Dictionary<string, string> DeleteMessages = new();
+
+    private async Task DeleteChatRoom(string roomName)
+    {
+        var response = await Http.DeleteAsync($"api/chat/rooms/delete/{roomName}");
+        var message = await response.Content.ReadAsStringAsync();
+
+        if (!DeleteMessages.ContainsKey(roomName))
+        {
+            DeleteMessages[roomName] = "";
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            await GetChatRooms();
+            DeleteMessages[roomName] = $"The room'{roomName}' was succesfully deleted.";
+        }
+        else
+        {
+            DeleteMessages[roomName] = message + " Try again when the room is empty!";
+            
+            var currentRoom = roomName;
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(2000);
+                if (DeleteMessages.ContainsKey(currentRoom))
+                {
+                    DeleteMessages.Remove(currentRoom);
+                    StateHasChanged(); 
+                }
+            });
+        }
+
+        StateHasChanged(); 
+    }
+    
+}

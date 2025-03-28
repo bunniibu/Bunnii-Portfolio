@@ -1,0 +1,195 @@
+﻿@page "/chat"
+@using Microsoft.AspNetCore.Http.Connections
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+<div class="container mt-4">
+    <h2 class="text-white bg-dark p-3 rounded text-center">Chat Room: @(RoomName ?? "Loading...")</h2>
+
+    @if (!IsConnected)
+    {
+        <div class="alert alert-info text-center">Connecting to chat...</div>
+    }
+    else
+    {
+        <div class="card shadow mt-3 bg-dark text-white">
+            <div class="card-header bg-purple text-white text-center">
+                Messages in @RoomName
+            </div>
+            <div class="card-body chat-container">
+                <ul class="list-group">
+                    @foreach (var msg in Messages)
+                    {
+                        <li class="list-group-item 
+                            @(msg.User == Nickname ? "my-message"
+                                                               : msg.User == "System" ? "system-message"
+                                                               : "other-message")">
+                            <strong>@msg.User:</strong> @msg.Text
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="card-footer d-flex">
+                <input @bind="message" class="form-control me-2 bg-light text-dark" placeholder="Enter message..." />
+                <button class="btn btn-purple" @onclick="SendMessage" disabled="@(string.IsNullOrEmpty(message))">Send</button>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <button class="btn btn-danger" @onclick="LeaveRoom">Leave Room</button>
+        </div>
+
+        <div class="mt-3">
+            <h5>Users in this Room:</h5>
+            <ul class="list-group">
+                @foreach (var user in UsersInRoom)
+                {
+                    <li class="list-group-item bg-dark text-white">@user</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+<style>
+    body {
+        background-color: #121212;
+        color: white;
+    }
+
+    .btn-purple {
+        background-color: #800080;
+        color: white;
+        border: none;
+    }
+
+    .btn-purple:hover {
+        background-color: #9b30ff;
+    }
+
+    .chat-container {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #1a1a1a;
+    }
+
+
+    .my-message {
+        background-color: #4B0082; 
+        color: white;
+        text-align: right;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 5px 0;
+    }
+    
+    .other-message {
+        background-color: #6a0dad; 
+        color: white;
+        text-align: left;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 5px 0;
+    }
+    
+    .system-message {
+        background-color: #333333; 
+        color: #f6f2d5; 
+        text-align: center;
+        font-style: italic;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 5px 0;
+    }
+</style>
+
+@code {
+    private HubConnection hubConnection;
+    private List<ChatMessage> Messages = new List<ChatMessage>();
+    private List<string> UsersInRoom = new List<string>();
+    private string RoomName;
+    private string Nickname;
+    private string message;
+    private bool IsConnected = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        RoomName = query["room"];
+        Nickname = query["user"];
+
+        if (string.IsNullOrEmpty(RoomName) || string.IsNullOrEmpty(Nickname))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://localhost:5256/chatHub", options =>
+            {
+                options.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling;
+            })
+            .Build();
+
+
+
+        hubConnection.On<string, string, string>("ReceiveMessage", (room, user, message) =>
+        {
+            if (room == RoomName)
+            {
+                Messages.Add(new ChatMessage { User = user, Text = message });
+                StateHasChanged();
+            }
+        });
+        
+        hubConnection.On<List<string>>("UpdateUserList", (users) =>
+        {
+            UsersInRoom = users;
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await hubConnection.InvokeAsync("JoinRoom", RoomName, Nickname);
+        IsConnected = true;
+        await GetUsersInRoom();
+    }
+    private async Task GetUsersInRoom()
+    {
+        UsersInRoom = await Http.GetFromJsonAsync<List<string>>($"api/chat/rooms/{RoomName}/users");
+        StateHasChanged();
+    }
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrEmpty(Nickname) && !string.IsNullOrEmpty(message))
+        {
+            await hubConnection.InvokeAsync("SendMessage", RoomName, Nickname, message);
+            message = "";
+        }
+    }
+
+   
+
+    private async Task LeaveRoom()
+    {
+        if (hubConnection != null)
+        {
+            await hubConnection.InvokeAsync("LeaveRoom", RoomName, Nickname);
+            await hubConnection.StopAsync();
+        }
+
+        Navigation.NavigateTo($"/chatroomspage/{Uri.EscapeDataString(Nickname)}", forceLoad: true);
+    }
+
+  
+
+    private class ChatMessage
+    {
+        public string User { get; set; }
+        public string Text { get; set; }
+    }
+}

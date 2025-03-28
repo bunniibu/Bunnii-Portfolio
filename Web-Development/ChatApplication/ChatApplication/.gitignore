@@ -1,0 +1,36 @@
+# Build
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# User-specific
+*.user
+*.suo
+*.DotSettings.user
+
+# VS Code / Rider / Visual Studio
+.vscode/
+.idea/
+.vs/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# NuGet
+*.nupkg
+packages/
+
+# Optional: Node/NPM cache if JS is used
+node_modules/
+
+# Backup files
+*.bak
+
+# Publish output
+publish/
