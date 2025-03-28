@@ -6,8 +6,8 @@ A web-based real-time chat application built with Blazor and SignalR. The applic
 
 ## Preview
 
-[![Chat App Demo](./assets/chat-preview.png)](https://www.youtube.com/watch?v=VIDEO_ID)  
-*Click the image to watch the demo video.*
+![Chat Preview](assets/LoginPage.png)
+
 
 ---
 
